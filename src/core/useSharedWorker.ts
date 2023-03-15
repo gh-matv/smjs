@@ -2,39 +2,46 @@ import {useEffect, useState} from "react";
 
 export default function useSharedWorker() {
 
-	if(typeof SharedWorker === 'undefined') return;
-	const sw = new SharedWorker('/sw.js');
+	const defSWValue = typeof SharedWorker === 'undefined' ? null : new SharedWorker('/sw.js');
+	const [sw, setSw] = useState<SharedWorker | null>(null);
 
-	const shared_worker = new SharedWorker('/sw.js', )
-	shared_worker.port.start()
+	// At first, create a shared worker and assign it to the state
+	useEffect(() => {
+		if(typeof SharedWorker === 'undefined') return;
+		const shared_worker = new SharedWorker('/sw.js');
+		setSw(shared_worker);
+	}, []);
 
-	setInterval(() => {
-		shared_worker.port.postMessage('test');
-	}, 1000);
+	// Then, add event listeners to the shared worker
+	useEffect(() => {
 
-	shared_worker.port.onmessage = function(e) {
-		console.log(e.data);
-	}
+		if(!sw) return;
 
-	function handleBeforeUnload() {
-		shared_worker.port.postMessage('close');
-	}
+		sw.port.onmessage = function(e) {
+			console.log(e.data);
+		}
 
-	function handleBlur() {
-		shared_worker.port.postMessage('blur');
-	}
+		function handleBeforeUnload() {
+			sw?.port.postMessage('close');
+		}
 
-	function handleFocus() {
-		shared_worker.port.postMessage('focus');
-	}
+		function handleBlur() {
+			sw?.port.postMessage('blur');
+		}
 
-	window.addEventListener('beforeunload', handleBeforeUnload);
-	window.addEventListener('blur', handleBlur);
-	window.addEventListener('focus', handleFocus);
+		function handleFocus() {
+			sw?.port.postMessage('focus');
+		}
 
-	return () => {
-		window.removeEventListener('beforeunload', handleBeforeUnload);
-		window.removeEventListener('blur', handleBlur);
-		window.removeEventListener('focus', handleFocus);
-	}
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		window.addEventListener('blur', handleBlur);
+		window.addEventListener('focus', handleFocus);
+
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+			window.removeEventListener('blur', handleBlur);
+			window.removeEventListener('focus', handleFocus);
+		}
+
+	}, [sw]);
 }
