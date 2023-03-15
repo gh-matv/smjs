@@ -23,6 +23,7 @@ let last_active_port = null;
  * @param msg {any}
  */
 const broadcast = (msg) => {
+    console.log("Broadcasting: " + msg)
     ports.forEach(port => port.port.postMessage(msg));
 }
 
@@ -39,13 +40,22 @@ const onFocus = (port) => {
 }
 
 /**
- * When a tab is closed, we remove it from the ports array
+ * When a tab is closed, or a component stops, we remove it from the ports array
  * @param port {MessagePort}
  */
 const onClose = (port) => {
     ports = ports.filter(p => p.port !== port);
-    broadcast("Remaining: " + ports.length);
+    broadcast("Client disconnected ! Remaining: " + ports.length);
 }
+
+const onOpen = (port) => {
+    ports.push({port, active: true});
+    broadcast("New client connected ! Remaining: " + ports.length);
+}
+
+setInterval(() => {
+    broadcast("ping");
+}, 1000);
 
 onconnect = function(e) {
 
@@ -60,6 +70,7 @@ onconnect = function(e) {
         switch (e.data) {
 
             case "ping":
+                console.log("PING>PONG")
                 port.postMessage("pong");
                 break;
 
