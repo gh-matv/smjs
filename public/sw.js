@@ -1,6 +1,6 @@
 /**
  * This is a shared worker, which means it is shared between all tabs
- *
+ * We use it so only the active tab receives the messages and the updates, saving bandwidth and CPU
  */
 
 /**
@@ -19,11 +19,23 @@ let ports = [];
 let last_active_port = null;
 
 /**
- * Broadcast a message to all ports
+ * Broadcast a message to all port,
+ * including the inactive ones (the ones that are not focused)
  * @param msg {any}
  */
 const broadcast = (msg) => {
+    console.log("Broadcasting: " + msg)
     ports.forEach(port => port.port.postMessage(msg));
+}
+
+/**
+ * Broadcast a message to all active ports
+ * Tabs in the background will not receive the message
+ * @param msg
+ */
+const broadcastToActive = (msg) => {
+    console.log("Broadcasting to active: " + msg)
+    ports.filter(p => p.active).forEach(port => port.port.postMessage(msg));
 }
 
 /**
@@ -39,13 +51,29 @@ const onFocus = (port) => {
 }
 
 /**
- * When a tab is closed, we remove it from the ports array
+ * When a tab is closed, or a component stops, we remove it from the ports array
  * @param port {MessagePort}
  */
 const onClose = (port) => {
     ports = ports.filter(p => p.port !== port);
-    broadcast("Remaining: " + ports.length);
+    broadcast("Client disconnected ! Remaining: " + ports.length);
 }
+
+const onOpen = (port) => {
+    ports.push({port, active: true});
+    broadcast("New client connected ! Remaining: " + ports.length);
+}
+
+setInterval(async () => {
+    const x = await fetch("api/hello").then(r => r.json());
+    console.log(x);
+    broadcastToActive({id: x.id, data: x.data});
+}, 1000);
+
+setInterval(async () => {
+    const x = await fetch("https://random-data-api.com/api/v2/users?size=2").then(r => r.json());
+    broadcast("IMPORTANT QMLDFKSJKLQMDSJKFKQDSJFMLKJ");
+}, 5000);
 
 onconnect = function(e) {
 
@@ -60,6 +88,7 @@ onconnect = function(e) {
         switch (e.data) {
 
             case "ping":
+                console.log("PING>PONG")
                 port.postMessage("pong");
                 break;
 
@@ -72,8 +101,7 @@ onconnect = function(e) {
                 break;
 
             case "blur": // When the user blurs the tab
-                // Ignored intentionally.
-                // The tab will be set as inactive when another tab is focused (see onFocus)
+                ports.find(p => p.port === port).active = false;
                 break;
 
         }
