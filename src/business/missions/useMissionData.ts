@@ -10,6 +10,7 @@ export default function useMissionData(name:string) {
 		setSw(sw);
 
 		const handleMessage = (message:any) => {
+			// console.log("Received message from shared worker", message);
 			setData(message);
 		}
 
