@@ -3,13 +3,15 @@ import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
 
-import useMissionData from "@/core/useMissionData"
+import useCurrentPageActive from '@/business/missions/useCurrentPageActive'
+import useUpdateDataById from '@/business/missions/useUpdateData'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
 
-	const sw = useMissionData("a");
+	const active = useCurrentPageActive();
+	const {data, loading} = useUpdateDataById<string>("1");
 
 	return (
 		<>
@@ -22,8 +24,13 @@ export default function Home() {
 			</Head>
 			<main className={styles.main}>
 				<div className={styles.description}>
+					<p style={{color: active ? "green" : "red"}}>
+						{active ? "active" : "not active"}
+					</p>
 					<p>
-						Get started by {JSON.stringify(sw)}
+						{
+							(loading && "loading") || data
+						}
 					</p>
 					<div>
 						<a

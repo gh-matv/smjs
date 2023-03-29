@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {missionsdatafetcher} from "@/business/missionsdatafetcher";
+import {missionsdatafetcher} from "@/business/missions/missionsdatafetcher";
 
 export default function useMissionData(name:string) {
 	const [sw, setSw] = useState<missionsdatafetcher|null>(null);

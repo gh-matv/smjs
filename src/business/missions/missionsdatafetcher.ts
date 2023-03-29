@@ -12,11 +12,15 @@ export class missionsdatafetcher {
     }
 
     event_focus = (ev:FocusEvent) => {
-        this._sw.port.postMessage("focus");
+        if(this && this._sw && this._sw.port) {
+            this._sw.port.postMessage("focus");
+        }
     }
 
     event_blur = (ev:FocusEvent) => {
-        this._sw.port.postMessage("blur");
+        if(this && this._sw && this._sw.port) {
+            this._sw.port.postMessage("blur");
+        }
     }
 
     destroy() {
@@ -36,11 +40,11 @@ export class missionsdatafetcher {
         this.callbacks.forEach(cb => cb(ev.data));
     }
 
-    subscribe(callback: (message:any)=>void) {
+    subscribe(callback: (message:any) => void) {
         this.callbacks.push(callback);
     }
 
-    unsubscribe(callback: (message:any)=>void) {
+    unsubscribe(callback: (message:any) => void) {
         this.callbacks = this.callbacks.filter(cb => cb !== callback);
     }
 
